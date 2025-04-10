@@ -2,3 +2,5 @@
 .Rhistory
 .RData
 .Ruserdata
+.DS__Store
+data/*
