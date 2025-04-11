@@ -3,21 +3,50 @@ title: "Assignment 2"
 author: "Carmen Hoyt and Karol Paya"
 date: "2025-04-10"
 output: html_document
+editor_options: 
+  chunk_output_type: console
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+# Conceptual Model
+
+```{r include-image, echo=FALSE, out.width='60%'}
+knitr::include_graphics("conceptual_model.jpg")
 ```
 
-# load libraries
+# Model Implementation
+
+## Load Libraries
+
+```{r, message=FALSE}
 library(readr)
 library(janitor)
+```
 
-# load data
-data <- read_delim("clim.txt", delim = " ", col_names = TRUE, quote = "")
+## Load Model and Data
 
-# use clean column function to remove quotations in column names 
-data <- data %>% clean_names()
+```{r, message=FALSE}
+# Load Model
+source("almond_yield_anomoly.R")
 
-# run function
+# Load Data
+data <- read_delim("clim.txt", delim = " ", col_names = TRUE, quote = "") %>%
+  # Clean column names
+  clean_names()
+```
+
+## Run Model
+
+```{r, message=FALSE}
+# Run Model
 almond_yield_anomaly_from_daily(data)
+
+# Save results
+almond <- almond_yield_anomaly_from_daily(data)
+
+# View results (in tons/acre)
+almond$min_yield_anomaly
+almond$mean_yield_anomaly
+almond$max_yield_anomaly
+```
+
+

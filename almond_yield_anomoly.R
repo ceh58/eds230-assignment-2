@@ -1,5 +1,6 @@
 #' Almond Yield Anomaly from Daily Data
 #'
+#' Computes almond yield anomalies (in tons/acre) given daily temperature (in degrees Celsius) and precipitation (in mm) data. 
 #' @param data dataframe that contains the columns: day, month, year, wy, tmin_c, precip
 #'
 #' @return output of function - list with yield anomalies and summary stats
@@ -10,6 +11,8 @@
 #' 
 
 almond_yield_anomaly_from_daily <- function(data) {
+  
+  # Load packages
   library(dplyr)
 
   # Compute February Tmin averages (Tn2)
