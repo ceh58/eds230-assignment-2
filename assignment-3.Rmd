@@ -1,0 +1,89 @@
+---
+title: "Assignment 3"
+author: "Carmen Hoyt and Karol Paya"
+date: "2025-04-17"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+# Background
+
+The **total almond yield** equation is the following:
+
+Y = -0.015Tn2 - 0.0046Tn2\^2 - 0.07P1 + 0.0043P1\^2 + 0.28
+
+where: Y: represents the yield anomaly (ton acre\^-2), Tn2: average minimum temperature for February (°C), P1: total precipitation for January (mm).
+
+To convert profits into **real profits** adjusted to the base year, we used the following equation:
+
+Inflation Adjusted Profit (base year) = Nominal Profit~t~ x Inflation Adjustment~t~
+
+Inflation Adjustment = Price Index~base\ year~ / ((1 + Inflation Rate~1~) x (1 + Inflation Rate~2~) x (1 + Inflation Rate~t~))
+
+US inflation data source: <https://www.macrotrends.net/global-metrics/countries/USA/united-states/inflation-rate-cpi>
+
+**Profit Model Assumptions**
+
+-   Real profits are calculated in 2010 dollars (base year), using cumulative inflation from 1988–2010.
+
+-   Constant Almond Price per Ton: The price of almonds is assumed to be \$5,000 per ton for all years.
+
+-   Inflation rates used are annual averages, taken from U.S. Consumer Price Index (CPI) data.
+
+## Load Libraries
+
+```{r, message=FALSE}
+library(readr)
+library(janitor)
+```
+
+## Load Model and Data
+
+```{r, message=FALSE}
+# Load Model
+source("almond_yield_anomoly.R")
+
+# Load Data
+data <- read_delim("clim.txt", delim = " ", col_names = TRUE, quote = "") %>%
+  # Clean column names
+  clean_names()
+```
+
+## Run Almond Model
+
+```{r, message=FALSE}
+# Run Model
+almond_yield_anomaly_from_daily(data)
+
+# Save results
+almond <- almond_yield_anomaly_from_daily(data)
+
+# View results (in tons/acre)
+almond$min_yield_anomaly
+almond$mean_yield_anomaly
+almond$max_yield_anomaly
+```
+
+## Run Profit Model
+
+```{r, message=FALSE}
+
+# Load inflation-adjusted profit function
+source("inflation_adjusted_profit.R")
+
+# Run the profit model with inflation adjustment
+profit_summary <- inflation_adjusted_profit(
+  yield = almond,
+  inflation_file = "macrotrends_us_inflation.csv",
+  price_per_ton = 5000,
+  base_year = 2010,
+  year_1 = 1988
+)
+
+# View inflation-adjusted profit results
+profit_summary$min_inflation_adjusted_profit
+profit_summary$mean_inflation_adjusted_profit
+profit_summary$max_inflation_adjusted_profit
+
+```
