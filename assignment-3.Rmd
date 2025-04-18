@@ -126,14 +126,14 @@ results <- parms %>% pmap(inflation_adjusted_profit,
                           year_1 = 1988)
 
 # Create a dataframe of results
-min_price <- map_df(results, `[`, c("min_inflation_adjusted_profit"))
-mean_price <- map_df(results, `[`, c("mean_inflation_adjusted_profit"))
-max_price <- map_df(results, `[`, c("max_inflation_adjusted_profit"))
+min_profit <- map_df(results, `[`, c("min_inflation_adjusted_profit"))
+mean_profit <- map_df(results, `[`, c("mean_inflation_adjusted_profit"))
+max_profit <- map_df(results, `[`, c("max_inflation_adjusted_profit"))
 
 results_df <- data.frame(
-  min_price = min_price$min_inflation_adjusted_profit,
-  mean_price = mean_price$mean_inflation_adjusted_profit,
-  max_price = max_price$max_inflation_adjusted_profit
+  min_profit = min_price$min_inflation_adjusted_profit,
+  mean_profit = mean_price$mean_inflation_adjusted_profit,
+  max_profit = max_price$max_inflation_adjusted_profit
 ) %>% 
   # Combine results with the sample params
   cbind(parms) %>%
@@ -142,10 +142,10 @@ results_df <- data.frame(
 
 # Plot results
 # Base year vs. profits (per anamoly)
-ggplot(results_df, aes(as.factor(anamoly), inflation_adjusted_profit, group = anamoly)) +
+ggplot(results_df, aes(as.factor(base_year), inflation_adjusted_profit, group = base_year)) +
   geom_boxplot() +
   labs(y = "Inflation Adjusted Profit",
-       x = "Base year",
+       x = "Base Year",
        title = "Base Year Sensitivity (2010 +/- 5 Years)")
 
 # Price per ton vs. profits (per anamoly)
@@ -156,5 +156,11 @@ ggplot(results_df, aes(price_per_ton, inflation_adjusted_profit, group = anamoly
        color = "Anamoly Category")
 ```
 
+A simple informal sensitivity analysis of almond yield profit was conducted using two parameters: `price_per_ton` and `base_year`. Price per ton was varied by 10 percent above and below the default values of $5,000, and base year was varied by 5 years above and below the default value of 2010. 40 samples from each parameter were generated and combined into a dataframe. This dataframe was mapped into the `inflation_adjusted_profit()` function, and results were combined with the parameter samples in a `results_df` dataframe. The profit values projected for each category of anamoly (minimum, mean, and maximum) were pivoted into an "anamoly" column and the profit values were organized into a "inflation_adjusted_profit" column to further break down the sensitivity analysis.
 
+Base Year Sensitivity:
+
+Graph #1 shows us how inflation-adjusted profit varies within the three categories of profit anomalies (max profit, mean profit, and minimum profit) with respect to a changing `base_year`. The US dollar profit value is calculated with respect to `base_year`, and it provides the upper bounds for calculating cumulative inflation since 1988. Base year was varied 5 years from the default value of 2010, providing a range from 2005-2015. The boxplots show the variation between the reported minimum, mean, and maximum profits values for the respective `base_year`. 
+
+Price per Ton Sensitivity:
 
