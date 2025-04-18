@@ -120,12 +120,8 @@ parms <- cbind.data.frame(price_per_ton = price_thresh, base_year = sample_years
 
 results <- parms %>% pmap(inflation_adjusted_profit,
                           yield = almond,
-  inflation_file = "macrotrends_us_inflation.csv",
-  year_1 = 1988)
-
-results[[1]]
-
-length(results)
+                          inflation_file = "macrotrends_us_inflation.csv",
+                          year_1 = 1988)
 
 # Create a dataframe of results
 min_price <- map_df(results, `[`, c("min_inflation_adjusted_profit"))
@@ -136,7 +132,10 @@ results_df <- data.frame(
   min_price = min_price$min_inflation_adjusted_profit,
   mean_price = mean_price$mean_inflation_adjusted_profit,
   max_price = max_price$max_inflation_adjusted_profit
-) %>% cbind(parms) %>%
+) %>% 
+  # Combine results with the sample params
+  cbind(parms) %>%
+  # Pivot inflation values to plot
   pivot_longer(cols = 1:3, values_to = "inflation_adjusted_profit", names_to = "anamoly")
 
 # Plot results
