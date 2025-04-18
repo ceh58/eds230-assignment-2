@@ -1,7 +1,7 @@
 ---
 title: "Assignment 3"
 author: "Carmen Hoyt and Karol Paya"
-date: "2025-04-17"
+date: "2025-04-18"
 output: html_document
 editor_options: 
   chunk_output_type: console
@@ -85,18 +85,20 @@ profit_summary$total_inflation_adjusted_profit
 profit_summary$min_inflation_adjusted_profit
 profit_summary$mean_inflation_adjusted_profit
 profit_summary$max_inflation_adjusted_profit
-
 ```
 
 ## Informal Sensitivity Analysis
 
 Parameter 1: `price_per_ton` is defaulted to $5,000/ton. Let's try +/- 10%.
 
-Parameter 2: `base_year` is defaulted to 2010. Let's try +/- 3 years.
+Parameter 2: `base_year` is defaulted to 2010. Let's try +/- 5 years.
 
 ```{r, message=FALSE}
-
+# Turn off scientific notation
 options(scipen=999)
+
+# Set number of samples
+n_samples <- 40
 
 # Parameter 1: Price (per ton)
 deviation <- 0.1 #10%
@@ -104,7 +106,7 @@ base_price <- 5000
 price_thresh <- runif(
   min = base_price - (deviation * base_price),
   max = base_price + (deviation * base_price),
-  n = 40 # samples
+  n = n_samples
 )
 
 # Parameter 2: Base Year 
@@ -112,7 +114,7 @@ deviation <- 5
 base_year <- 2010
 sample_years <- sample(
   (base_year - 5):(base_year + 5), 
-  size = 40, 
+  size = n_samples, 
   replace = TRUE)
 
 # Put samples together
@@ -140,11 +142,11 @@ results_df <- data.frame(
 
 # Plot results
 # Base year vs. profits (per anamoly)
-ggplot(results_df, aes(as.factor(base_year), inflation_adjusted_profit, group = anamoly, fill = anamoly)) +
+ggplot(results_df, aes(as.factor(anamoly), inflation_adjusted_profit, group = anamoly)) +
   geom_boxplot() +
   labs(y = "Inflation Adjusted Profit",
        x = "Base year",
-       fill = "Anamoly Category")
+       title = "Base Year Sensitivity (2010 +/- 5 Years)")
 
 # Price per ton vs. profits (per anamoly)
 ggplot(results_df, aes(price_per_ton, inflation_adjusted_profit, group = anamoly, color = anamoly)) +
@@ -153,4 +155,6 @@ ggplot(results_df, aes(price_per_ton, inflation_adjusted_profit, group = anamoly
        y = "Inflation Adjusted Profit",
        color = "Anamoly Category")
 ```
+
+
 
