@@ -48,7 +48,8 @@ inflation_adjusted_profit <- function(yield,
   mean_inflation_adjusted_profit <- mean(yield$NPV)
   
   # Return summary of inflation-adjusted profits
-  return(list(yield,
+  return(list(
+    #yield = yield,
     total_inflation_adjusted_profit = total_inflation_adjusted_profit,
     min_inflation_adjusted_profit = min_inflation_adjusted_profit,
     mean_inflation_adjusted_profit = mean_inflation_adjusted_profit, 
