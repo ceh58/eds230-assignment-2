@@ -85,6 +85,7 @@ profit_summary$total_inflation_adjusted_profit
 profit_summary$min_inflation_adjusted_profit
 profit_summary$mean_inflation_adjusted_profit
 profit_summary$max_inflation_adjusted_profit
+yield
 ```
 
 ## Informal Sensitivity Analysis
