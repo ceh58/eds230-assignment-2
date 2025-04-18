@@ -85,7 +85,6 @@ profit_summary$total_inflation_adjusted_profit
 profit_summary$min_inflation_adjusted_profit
 profit_summary$mean_inflation_adjusted_profit
 profit_summary$max_inflation_adjusted_profit
-yield
 ```
 
 ## Informal Sensitivity Analysis
@@ -132,9 +131,9 @@ mean_profit <- map_df(results, `[`, c("mean_inflation_adjusted_profit"))
 max_profit <- map_df(results, `[`, c("max_inflation_adjusted_profit"))
 
 results_df <- data.frame(
-  min_profit = min_price$min_inflation_adjusted_profit,
-  mean_profit = mean_price$mean_inflation_adjusted_profit,
-  max_profit = max_price$max_inflation_adjusted_profit
+  min_profit = min_profit$min_inflation_adjusted_profit,
+  mean_profit = mean_profit$mean_inflation_adjusted_profit,
+  max_profit = max_profit$max_inflation_adjusted_profit
 ) %>% 
   # Combine results with the sample params
   cbind(parms) %>%
