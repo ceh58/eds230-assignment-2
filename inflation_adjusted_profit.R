@@ -27,7 +27,7 @@ inflation_adjusted_profit <- function(yield,
   nominal_profit_avg <- yield_avg * price_per_ton
   
   #load data
-  inflation_df <- read_csv(inflation_file)
+  inflation_df <- read_csv(inflation_file, show_col_types = FALSE)
   
   # Calculate inflation rates
   inflation_rates<- inflation_df%>%

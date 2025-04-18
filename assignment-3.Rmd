@@ -68,7 +68,6 @@ almond$max_yield_anomaly
 ## Run Profit Model
 
 ```{r, message=FALSE}
-
 # Load inflation-adjusted profit function
 source("inflation_adjusted_profit.R")
 
@@ -87,3 +86,50 @@ profit_summary$mean_inflation_adjusted_profit
 profit_summary$max_inflation_adjusted_profit
 
 ```
+
+## Informal Sensitivity Analysis
+
+Parameter 1: `price_per_ton` is defaulted to $5,000/ton. Let's try +/- 10%.
+
+Parameter 2: `base_year` is defaulted to 2010. Let's try +/- 3 years.
+
+```{r, message=FALSE}
+# Parameter 1
+deviation <- 0.1 #10%
+base_price <- 5000
+price_thresh <- runif(
+  min = base_price - (deviation * base_price),
+  max = base_price + (deviation * base_price),
+  n = 40 # samples
+)
+
+# Run model for price parameters
+profit_summary_price <- price_thresh %>%
+  map(~ inflation_adjusted_profit(
+  yield = almond,
+  inflation_file = "macrotrends_us_inflation.csv",
+  price_per_ton = .x,
+  base_year = 2010,
+  year_1 = 1988
+))
+
+
+# Create a dataframe of results
+min_price <- map_df(profit_summary_price, `[`, c("min_inflation_adjusted_profit"))
+mean_price <- map_df(profit_summary_price, `[`, c("mean_inflation_adjusted_profit"))
+max_price <- map_df(profit_summary_price, `[`, c("max_inflation_adjusted_profit"))
+
+price_df <- data.frame(
+  min_price = min_price$min_inflation_adjusted_profit,
+  mean_price = mean_price$mean_inflation_adjusted_profit,
+  max_price = max_price$max_inflation_adjusted_profit
+) %>%
+  pivot_longer(everything(), values_to = "inflation_adjusted_profit", names_to = "parameter")
+
+# Plot results
+ggplot(price_df, aes(as.factor(parameter), inflation_adjusted_profit, group = parameter)) +
+  geom_boxplot() +
+  labs(y = "Price",
+       x = "Parameter")
+```
+
