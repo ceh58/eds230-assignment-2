@@ -1,7 +1,7 @@
 ---
 title: "Assignment 3"
 author: "Carmen Hoyt and Karol Paya"
-date: "2025-04-17"
+date: "2025-04-18"
 output: html_document
 editor_options: 
   chunk_output_type: console
@@ -68,7 +68,6 @@ almond$max_yield_anomaly
 ## Run Profit Model
 
 ```{r, message=FALSE}
-
 # Load inflation-adjusted profit function
 source("inflation_adjusted_profit.R")
 
@@ -86,5 +85,76 @@ profit_summary$total_inflation_adjusted_profit
 profit_summary$min_inflation_adjusted_profit
 profit_summary$mean_inflation_adjusted_profit
 profit_summary$max_inflation_adjusted_profit
-
 ```
+
+## Informal Sensitivity Analysis
+
+Parameter 1: `price_per_ton` is defaulted to $5,000/ton. Let's try +/- 10%.
+
+Parameter 2: `base_year` is defaulted to 2010. Let's try +/- 5 years.
+
+```{r, message=FALSE}
+# Turn off scientific notation
+options(scipen=999)
+
+# Set number of samples
+n_samples <- 40
+
+# Parameter 1: Price (per ton)
+deviation <- 0.1 #10%
+base_price <- 5000
+price_thresh <- runif(
+  min = base_price - (deviation * base_price),
+  max = base_price + (deviation * base_price),
+  n = n_samples
+)
+
+# Parameter 2: Base Year 
+deviation <- 5
+base_year <- 2010
+sample_years <- sample(
+  (base_year - 5):(base_year + 5), 
+  size = n_samples, 
+  replace = TRUE)
+
+# Put samples together
+parms <- cbind.data.frame(price_per_ton = price_thresh, base_year = sample_years)
+
+results <- parms %>% pmap(inflation_adjusted_profit,
+                          yield = almond,
+                          inflation_file = "macrotrends_us_inflation.csv",
+                          year_1 = 1988)
+
+# Create a dataframe of results
+min_price <- map_df(results, `[`, c("min_inflation_adjusted_profit"))
+mean_price <- map_df(results, `[`, c("mean_inflation_adjusted_profit"))
+max_price <- map_df(results, `[`, c("max_inflation_adjusted_profit"))
+
+results_df <- data.frame(
+  min_price = min_price$min_inflation_adjusted_profit,
+  mean_price = mean_price$mean_inflation_adjusted_profit,
+  max_price = max_price$max_inflation_adjusted_profit
+) %>% 
+  # Combine results with the sample params
+  cbind(parms) %>%
+  # Pivot inflation values to plot
+  pivot_longer(cols = 1:3, values_to = "inflation_adjusted_profit", names_to = "anamoly")
+
+# Plot results
+# Base year vs. profits (per anamoly)
+ggplot(results_df, aes(as.factor(anamoly), inflation_adjusted_profit, group = anamoly)) +
+  geom_boxplot() +
+  labs(y = "Inflation Adjusted Profit",
+       x = "Base year",
+       title = "Base Year Sensitivity (2010 +/- 5 Years)")
+
+# Price per ton vs. profits (per anamoly)
+ggplot(results_df, aes(price_per_ton, inflation_adjusted_profit, group = anamoly, color = anamoly)) +
+  geom_line() +
+  labs(x = "Price (per ton)",
+       y = "Inflation Adjusted Profit",
+       color = "Anamoly Category")
+```
+
+
+

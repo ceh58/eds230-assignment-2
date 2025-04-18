@@ -28,7 +28,7 @@ inflation_adjusted_profit <- function(yield,
     mutate(profit_before_inflation = price_per_ton * almond_yield_anomalies)
   
   #load data
-  inflation_df <- read_csv("macrotrends_us_inflation.csv")
+  inflation_df <- read_csv(inflation_file, show_col_types = FALSE)
   
   # Filter inflation data for the selected years and convert to decimal
   inflation_rates <- inflation_df %>%
