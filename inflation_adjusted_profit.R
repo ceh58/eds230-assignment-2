@@ -17,34 +17,39 @@ inflation_adjusted_profit <- function(yield,
   library(dplyr)
   library(readr)
   
-  # Calculate nominal profits from yield anomalies
-  yield_min <- yield$min_yield_anomaly
-  yield_max <- yield$max_yield_anomaly
-  yield_avg <-yield$mean_yield_anomaly
+  # Create a data frame for almond yields
+  yield <- data.frame(
+    year = as.numeric(names(almond$yield_anomalies)),  # Extract years
+    almond_yield_anomalies = unname(almond$yield_anomalies)  # Get the values without the names
+  )    
   
-  nominal_profit_min <- yield_min * price_per_ton
-  nominal_profit_max <- yield_max * price_per_ton
-  nominal_profit_avg <- yield_avg * price_per_ton
+  # Add yearly profit to yield
+  yield <- yield %>%
+    mutate(profit_before_inflation = price_per_ton * almond_yield_anomalies)
   
   #load data
-  inflation_df <- read_csv(inflation_file)
+  inflation_df <- read_csv("macrotrends_us_inflation.csv")
   
-  # Calculate inflation rates
-  inflation_rates<- inflation_df%>%
-  filter(year >= year_1 & year <= base_year)%>% # filter data for selected years
-  mutate(us_inflation_rate = us_inflation_rate / 100)%>% # covert %rate to decimal
-  pull(us_inflation_rate)
+  # Filter inflation data for the selected years and convert to decimal
+  inflation_rates <- inflation_df %>%
+    filter(year >= year_1 & year <= base_year) %>% # Filter data for selected years
+    mutate(us_inflation_rate = us_inflation_rate / 100) %>% # Convert percentage to decimal
+    pull(us_inflation_rate)
   
-  #Calculate the cumulative inflation adjustment factor from year_1 to the base year
-  inflation_adjustment <- prod(1 + inflation_rates)
-
-  # Apply the cumulative inflation adjustment to nominal profits
-  min_inflation_adjusted_profit <- nominal_profit_min * inflation_adjustment
-  max_inflation_adjusted_profit <- nominal_profit_max * inflation_adjustment
-  mean_inflation_adjusted_profit <- nominal_profit_avg * inflation_adjustment
+  # Calculate NPV
+  yield <- yield %>%
+    left_join(inflation_df %>% select(year, us_inflation_rate), by = "year")%>%
+    mutate(NPV = profit_before_inflation * (1 + us_inflation_rate))
+  
+  # Calculate statics 
+  total_inflation_adjusted_profit <- sum(yield$NPV)
+  min_inflation_adjusted_profit <- min(yield$NPV)
+  max_inflation_adjusted_profit <- max(yield$NPV)
+  mean_inflation_adjusted_profit <- mean(yield$NPV)
   
   # Return summary of inflation-adjusted profits
   return(list(
+    total_inflation_adjusted_profit = total_inflation_adjusted_profit,
     min_inflation_adjusted_profit = min_inflation_adjusted_profit,
     mean_inflation_adjusted_profit = mean_inflation_adjusted_profit, 
     max_inflation_adjusted_profit = max_inflation_adjusted_profit
