@@ -19,7 +19,7 @@ To convert profits into **real profits** adjusted to the base year, we used the 
 
 Inflation Adjusted Profit (base year) = Nominal Profit~t~ x Inflation Adjustment~t~
 
-Inflation Adjustment = Price Index~base\ year~ / ((1 + Inflation Rate~1~) x (1 + Inflation Rate~2~) x (1 + Inflation Rate~t~))
+Inflation Adjustment = Price Index~base year~ / ((1 + Inflation Rate~1~) x (1 + Inflation Rate~2~) x (1 + Inflation Rate~t~))
 
 US inflation data source: <https://www.macrotrends.net/global-metrics/countries/USA/united-states/inflation-rate-cpi>
 
@@ -81,6 +81,7 @@ profit_summary <- inflation_adjusted_profit(
 )
 
 # View inflation-adjusted profit results
+profit_summary$total_inflation_adjusted_profit
 profit_summary$min_inflation_adjusted_profit
 profit_summary$mean_inflation_adjusted_profit
 profit_summary$max_inflation_adjusted_profit
