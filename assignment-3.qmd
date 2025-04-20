@@ -1,0 +1,167 @@
+---
+title: "Assignment 3: Profit with Almond Yield"
+author: "Carmen Hoyt and Karol Paya"
+date: "2025-04-18"
+format: html
+editor: visual
+---
+
+# Background
+
+The **total almond yield** equation is the following:
+
+Y = -0.015Tn2 - 0.0046Tn2\^2 - 0.07P1 + 0.0043P1\^2 + 0.28
+
+where: Y: represents the yield anomaly (ton acre\^-2), Tn2: average minimum temperature for February (°C), P1: total precipitation for January (mm).
+
+To convert profits into **real profits** adjusted to the base year, we used the following equation:
+
+Inflation Adjusted Profit (base year) = Nominal Profit~t~ x Inflation Adjustment~t~
+
+Inflation Adjustment = Price Index~base year~ / ((1 + Inflation Rate~1~) x (1 + Inflation Rate~2~) x (1 + Inflation Rate~t~))
+
+[US inflation data source](https://www.macrotrends.net/global-metrics/countries/USA/united-states/inflation-rate-cpi)
+
+**Profit Model Assumptions**
+
+-   Real profits are calculated in 2010 dollars (base year), using cumulative inflation from 1988–2010.
+
+-   Constant Almond Price per Ton: The price of almonds is assumed to be \$5,000 per ton for all years.
+
+-   Inflation rates used are annual averages, taken from U.S. Consumer Price Index (CPI) data.
+
+## Load Libraries
+
+```{r, message=FALSE}
+library(readr)
+library(janitor)
+```
+
+## Load Model and Data
+
+```{r, message=FALSE}
+# Load Profit Model
+source("almond_yield_anomoly.R")
+
+# Load Data
+data <- read_delim("clim.txt", delim = " ", col_names = TRUE, quote = "") %>%
+  # Clean column names
+  clean_names()
+```
+
+## Run Almond Model
+
+```{r, message=FALSE}
+# Run Model
+almond_yield_anomaly_from_daily(data)
+
+# Save results
+almond <- almond_yield_anomaly_from_daily(data)
+
+# View results (in tons/acre)
+almond$min_yield_anomaly
+almond$mean_yield_anomaly
+almond$max_yield_anomaly
+almond$yield_anomalies
+```
+
+## Run Profit Model
+
+```{r, message=FALSE}
+# Load inflation-adjusted profit function
+source("inflation_adjusted_profit.R")
+
+# Run the profit model with inflation adjustment
+profit_summary <- inflation_adjusted_profit(
+  yield = almond,
+  inflation_file = "macrotrends_us_inflation.csv",
+  price_per_ton = 5000,
+  base_year = 2010,
+  year_1 = 1988
+)
+
+# View inflation-adjusted profit results
+profit_summary$total_inflation_adjusted_profit
+profit_summary$min_inflation_adjusted_profit
+profit_summary$mean_inflation_adjusted_profit
+profit_summary$max_inflation_adjusted_profit
+profit_summary$yield
+```
+
+## Informal Sensitivity Analysis
+
+### Parameter 1: `price_per_ton` is defaulted to $5,000/ton. Let's try +/- 10%.
+
+### Parameter 2: `base_year` is defaulted to 2010. Let's try +/- 5 years.
+
+```{r, message=FALSE}
+# Turn off scientific notation
+options(scipen=999)
+
+# Set number of samples
+n_samples <- 100
+
+# Parameter 1: Price (per ton)
+deviation <- 0.1 #10%
+base_price <- 5000
+price_thresh <- runif(
+  min = base_price - (deviation * base_price),
+  max = base_price + (deviation * base_price),
+  n = n_samples
+)
+
+# Parameter 2: Base Year 
+deviation <- 5
+base_year <- 2010
+sample_years <- sample(
+  (base_year - 5):(base_year + 5), 
+  size = n_samples, 
+  replace = TRUE)
+
+# Put samples together
+params <- cbind.data.frame(price_per_ton = price_thresh, base_year = sample_years)
+
+results <- params %>% pmap(inflation_adjusted_profit,
+                          yield = almond,
+                          inflation_file = "macrotrends_us_inflation.csv",
+                          year_1 = 1988)
+
+# Pull the time series data from "yield"
+time_series <- map_df(results, "yield") %>%
+  # Add parameters
+  cbind(params)
+
+colnames(time_series) <- c("year", "yield_anamolies", "profit_before_inflation", "inflation_rate", "profit_adjusted_inflation", "price_per_ton", "base_year")
+
+# Plot results
+# Graph 1: uncertainty in profits through time
+ggplot(time_series, aes(as.factor(year), profit_adjusted_inflation)) +
+  geom_boxplot() +
+  scale_x_discrete(breaks = function(x) x[seq(1, length(x), 2)]) +
+  scale_y_continuous(labels = scales::label_dollar()) +
+  labs(x = "Year",
+       y = "Inflation-Adjusted Profit (USD)",
+       title = "Uncertainty in Inflation-Adjusted Almond Profits over Time \n (1989-2010)") +
+  theme_minimal()
+
+# Graph 2: how profit varies with base year parameter
+ggplot(time_series, aes(as.factor(base_year), profit_adjusted_inflation)) +
+  geom_boxplot() +
+  scale_y_continuous(labels = scales::label_dollar()) +
+  labs(x = "Base Year (Parameter)",
+       y = "Inflation-Adjusted Profit (USD)",
+       title = "Uncertainty in Inflation-Adjusted Profits by Variation in Base Year\n (2010 +/- 5 Years)") +
+  theme_minimal()
+```
+
+### Results
+
+A simple informal sensitivity analysis of inflation-adjusted almond yield profit was conducted by adjusting two parameters: `price_per_ton` and `base_year`. Price per ton was varied by 10 percent above and below the default value of $5,000, and base year was varied by 5 years above and below the default value of 2010. 100 samples from each variation were generated and combined into a dataframe. This dataframe was mapped into the `inflation_adjusted_profit()` function, and the results were combined with the parameter samples in a `time_series` dataframe.
+
+#### Uncertainty in Profits over Time
+
+Graph #1 shows us the uncertainty in inflation-adjusted profits based off variation in the two chosen parameters, `price_per_ton` and `base_year`, for the time period 1989-2010 (the time period for which we previously generated almond yield anomaly estimates). From the graph, you can see that 1995 is more sensitive to the most variation in profit, perhaps because this was the year of maximum yield anomaly from our original model. The maximum yield anomaly (~ 1920 tons/acre) is more susceptible in changes in price and base year, and general sensitivity in the model decreases as almond yield anomaly decreases. Over the majority of the years, variation is minimal.
+
+#### Profit Variation by Base Year
+
+The US dollar profit value is calculated with respect to `base_year`, and it provides the upper bounds for calculating cumulative inflation since 1988. Base year was varied 5 years from the default value of 2010, providing a range from 2005-2015. The boxplots on Graph #2 show profit variation with respective `base_year`, and they appear to be relatively stable (minimal change in profit when the time range for calculating cumulative inflation changes) across the variation base year range. You can see the general groupings of maximum and mean almond yield anomalies in the outlier points, but these groupings are consistent across base years. Thus, it makes sense that 1995 would stand out in Graph #1, as this is an outlier year. Our main takeaway is that the model is robust across some variation in parameters, particularly `base_year`. 
