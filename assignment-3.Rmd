@@ -161,7 +161,7 @@ A simple informal sensitivity analysis of inflation-adjusted almond yield profit
 
 #### Uncertainty in Profits over Time
 
-Graph #1 shows us the uncertainty in inflation-adjusted profits based off variation in the two chosen parameters, `price_per_ton` and `base_year`, for the time period 1989-2010 (the time period for which we previously generated almond yield anomaly estimates). From the graph, you can see that 1995 is more sensitive to the most variation in profit, perhaps because this was the year of maximum yield anomaly from our original model. The maximum yield of ~ 1920 tons/acre is more susceptible in changes in price and base year, and general sensitivity in the model decreases as almond yield anomaly decreases.
+Graph #1 shows us the uncertainty in inflation-adjusted profits based off variation in the two chosen parameters, `price_per_ton` and `base_year`, for the time period 1989-2010 (the time period for which we previously generated almond yield anomaly estimates). From the graph, you can see that 1995 is more sensitive to the most variation in profit, perhaps because this was the year of maximum yield anomaly from our original model. The maximum yield anomaly (~ 1920 tons/acre) is more susceptible in changes in price and base year, and general sensitivity in the model decreases as almond yield anomaly decreases. Over the majority of the years, variation is minimal.
 
 #### Profit Variation by Base Year
 
