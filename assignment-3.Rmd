@@ -41,7 +41,7 @@ library(janitor)
 ## Load Model and Data
 
 ```{r, message=FALSE}
-# Load Model
+# Load Profit Model
 source("almond_yield_anomoly.R")
 
 # Load Data
@@ -63,6 +63,7 @@ almond <- almond_yield_anomaly_from_daily(data)
 almond$min_yield_anomaly
 almond$mean_yield_anomaly
 almond$max_yield_anomaly
+almond$yield_anomalies
 ```
 
 ## Run Profit Model
@@ -85,6 +86,7 @@ profit_summary$total_inflation_adjusted_profit
 profit_summary$min_inflation_adjusted_profit
 profit_summary$mean_inflation_adjusted_profit
 profit_summary$max_inflation_adjusted_profit
+profit_summary$yield
 ```
 
 ## Informal Sensitivity Analysis
@@ -98,7 +100,7 @@ Parameter 2: `base_year` is defaulted to 2010. Let's try +/- 5 years.
 options(scipen=999)
 
 # Set number of samples
-n_samples <- 300
+n_samples <- 100
 
 # Parameter 1: Price (per ton)
 deviation <- 0.1 #10%
@@ -118,30 +120,51 @@ sample_years <- sample(
   replace = TRUE)
 
 # Put samples together
-parms <- cbind.data.frame(price_per_ton = price_thresh, base_year = sample_years)
+params <- cbind.data.frame(price_per_ton = price_thresh, base_year = sample_years)
 
-results <- parms %>% pmap(inflation_adjusted_profit,
+results <- params %>% pmap(inflation_adjusted_profit,
                           yield = almond,
                           inflation_file = "macrotrends_us_inflation.csv",
                           year_1 = 1988)
 
 # Create a dataframe of results
-min_profit <- map_df(results, `[`, c("min_inflation_adjusted_profit"))
-mean_profit <- map_df(results, `[`, c("mean_inflation_adjusted_profit"))
-max_profit <- map_df(results, `[`, c("max_inflation_adjusted_profit"))
-time_series <- map_df(results, `[`, c("yield"))
+#min_profit <- map_df(results, `[`, c("min_inflation_adjusted_profit"))
+#mean_profit <- map_df(results, `[`, c("mean_inflation_adjusted_profit"))
+#max_profit <- map_df(results, `[`, c("max_inflation_adjusted_profit"))
+time_series <- map_df(results, "yield") %>%
+  # Add parameters
+  cbind(params)
 
-results_df <- data.frame(
-  min_anamoly = min_profit$min_inflation_adjusted_profit,
-  mean_anamoly = mean_profit$mean_inflation_adjusted_profit,
-  max_anamoly = max_profit$max_inflation_adjusted_profit
-) %>% 
+colnames(time_series) <- c("year", "yield_anamolies", "profit_before_inflation", "inflation_rate", "profit_adjusted_inflation", "price_per_ton", "base_year")
+
+# results_df <- data.frame(
+#   min_anamoly = min_profit$min_inflation_adjusted_profit,
+#   mean_anamoly = mean_profit$mean_inflation_adjusted_profit,
+#   max_anamoly = max_profit$max_inflation_adjusted_profit
+# ) %>% 
   # Combine results with the sample params
-  cbind(parms) %>%
+  #cbind(parms)
   # Pivot inflation values to plot
-  pivot_longer(cols = 1:3, values_to = "inflation_adjusted_profit", names_to = "anamoly")
+  #pivot_longer(cols = 1:3, values_to = "inflation_adjusted_profit", names_to = "anamoly")
 
 # Plot results
+# Graph 1: Uncertainty in profits through time
+ggplot(time_series, aes(as.factor(year), profit_adjusted_inflation)) +
+  geom_boxplot() +
+  scale_x_discrete(breaks = function(x) x[seq(1, length(x), 2)]) +
+  scale_y_continuous(labels = scales::label_dollar()) +
+  labs(x = "Year",
+       y = "Inflation-Adjusted Profit (USD)",
+       title = "Uncertainty in Inflation-Adjusted Almond Profits Through Time (1989-2010)") 
+  theme_minimal()
+
+# Graph 2: almond yields in any one year or for all years together, with uncertainty
+#one that show how profit in general varies with your parameters
+time_series %>%
+  pivot_longer(cols = 6:7, names_to = "parameter", values_to = "sensitivity") %>%
+ggplot(aes(price_per_ton, parameter)) +
+  geom_boxplot()
+  
 # Base year vs. profits (per anamoly)
 ggplot(results_df, aes(as.factor(base_year), inflation_adjusted_profit, fill = anamoly)) +
   geom_boxplot() +

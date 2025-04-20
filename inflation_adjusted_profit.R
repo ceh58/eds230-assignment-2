@@ -1,7 +1,7 @@
 
 ##' Inflation-Adjusted Almond Profits from Almond Yield
 #'
-#' @param almond A list from `almond_yield_anomaly_from_daily()` function
+#' @param yield A list from `almond_yield_anomaly_from_daily()` function
 #' @param inflation_file Path to CSV with columns: year, us_inflation_rate
 #' @param price_per_ton Almond price per ton in USD (default = 6000)
 #' @param base_year The year to adjust profits to (default = 2010)
@@ -19,8 +19,8 @@ inflation_adjusted_profit <- function(yield,
   
   # Create a data frame for almond yields
   yield <- data.frame(
-    year = as.numeric(names(almond$yield_anomalies)),  # Extract years
-    almond_yield_anomalies = unname(almond$yield_anomalies)  # Get the values without the names
+    year = as.numeric(names(yield$yield_anomalies)),  # Extract years
+    almond_yield_anomalies = unname(yield$yield_anomalies)  # Get the values without the names
   )    
   
   # Add yearly profit to yield
@@ -49,7 +49,7 @@ inflation_adjusted_profit <- function(yield,
   
   # Return summary of inflation-adjusted profits
   return(list(
-    #yield = yield,
+    yield = yield,
     total_inflation_adjusted_profit = total_inflation_adjusted_profit,
     min_inflation_adjusted_profit = min_inflation_adjusted_profit,
     mean_inflation_adjusted_profit = mean_inflation_adjusted_profit, 
